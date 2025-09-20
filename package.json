@@ -1,0 +1,43 @@
+{
+  "name": "nadac-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for National Average Drug Acquisition Cost (NADAC) data from CMS",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "nadac",
+    "pharmaceutical",
+    "drug-pricing",
+    "cms",
+    "medicaid"
+  ],
+  "author": "Sagar Jain",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sagarjaink/nadac-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sagarjaink/nadac-mcp-server/issues"
+  },
+  "homepage": "https://github.com/sagarjaink/nadac-mcp-server#readme"
+}
