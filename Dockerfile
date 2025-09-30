@@ -7,4 +7,4 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 EXPOSE 8080
-CMD ["fastmcp", "run", "server.py", "--port", "8080", "--transport", "streamable-http"]
+CMD ["sh", "-c", "fastmcp run server.py --port $PORT --host 0.0.0.0 --transport streamable-http"]
