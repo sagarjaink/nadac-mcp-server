@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamable.js';
 import {
   CallToolRequestSchema,
   ErrorCode,
@@ -367,36 +368,60 @@ class NADACServer {
     };
   }
 
-  async run() {
-    const transport = new StdioServerTransport();
-    await this.server.connect(transport);
-    console.error('NADAC MCP server running on stdio');
-  }
+  async runHTTP(port = process.env.PORT || 8080) {
+  const app = express();
+  
+  app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Mcp-Session-Id'],
+    credentials: true
+  }));
+  
+  app.use(express.json());
 
-  // HTTP server for cloud deployment
-  async runHTTP(port = process.env.PORT || 3000) {
-    const app = express();
-    app.use(cors());
-    app.use(express.json());
-
-    app.get('/health', (req, res) => {
-      res.json({ status: 'healthy', server: 'nadac-mcp-server' });
+  app.get('/health', (req, res) => {
+    res.json({ 
+      status: 'healthy', 
+      server: 'nadac-mcp-server',
+      version: '1.0.4',
+      timestamp: new Date().toISOString()
     });
+  });
 
-    app.post('/mcp', async (req, res) => {
-      try {
-        // Handle MCP requests via HTTP
-        const result = await this.server.request(req.body);
-        res.json(result);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+  const handleMCP = async (req, res) => {
+    console.log('MCP Request received:', JSON.stringify(req.body, null, 2));
+    
+    try {
+      const transport = new StreamableHTTPServerTransport();
+      await this.server.connect(transport);
+      await transport.handleRequest(req, res);
+    } catch (error) {
+      console.error('Error handling MCP request:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: error.message,
+          jsonrpc: '2.0',
+          id: req.body?.id || null
+        });
       }
-    });
+    }
+  };
 
-    app.listen(port, () => {
-      console.log(`NADAC MCP server running on port ${port}`);
+  app.post('/mcp', handleMCP);
+  app.get('/mcp', handleMCP);
+
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`NADAC MCP server running on port ${port}`);
+    console.log(`Health check: http://localhost:${port}/health`);
+    console.log(`MCP endpoint: http://localhost:${port}/mcp`);
+    console.log(`Protocol version: 2025-03-26 (Streamable HTTP)`);
+    console.log('Server info:', {
+      name: 'nadac-mcp-server',
+      version: '1.0.4',
+      description: 'MCP server providing access to NADAC pharmaceutical pricing data'
     });
-  }
+  });
 }
 
 // Check if running in HTTP mode (for cloud deployment)
